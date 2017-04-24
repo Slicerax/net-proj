@@ -97,14 +97,6 @@ public class TcpServer {
                 } else if (tokens[0].equals("CHAT_STATE")) {
                     Main.clientObjects.get(clientID).available = false;
                     String otherClient = Main.clientObjects.get(clientID).partner;
-                    if (chatHistory.containsKey(otherClient)) {
-                        chatHistory.get(otherClient).put(session, new chatSession(Main.clientObjects.get(clientID).sessionID, clientID, otherClient));
-                    }
-                    else{
-                        chatHistory.put(otherClient, new HashMap<>());
-                        chatHistory.get(otherClient).put(Main.clientObjects.get(clientID).sessionID,
-                                new chatSession(Main.clientObjects.get(clientID).sessionID, clientID, otherClient));
-                    }
                     //begin chatSession saving
                     //chatSession currChat = new chatSession(Main.clientObjects.get(clientID).sessionID, clientID, Main.clientObjects.get(clientID).partner);
                     while(true) {
@@ -125,25 +117,7 @@ public class TcpServer {
                             Main.clientObjects.get(clientID).available = true;
                             break;
                         }
-                        //what we are sending
-                        //if we have entry for other client
-                        if(chatHistory.containsKey(otherClient)){
-                            //if we have entry in hashmap for other client message sessions
-                            if(chatHistory.get(otherClient).containsKey(Main.clientObjects.get(clientID).sessionID)){
-                                chatHistory.get(otherClient).get(Main.clientObjects.get(clientID).sessionID).addMessage(messageIn, clientID);
-                            }
-                            else{
-                                chatHistory.get(otherClient).put(Main.clientObjects.get(clientID).sessionID,
-                                        new chatSession(Main.clientObjects.get(clientID).sessionID, clientID, otherClient));
-                                chatHistory.get(otherClient).get(Main.clientObjects.get(clientID).sessionID).addMessage(messageIn, clientID);
-                            }
-                        }else{
-                            chatHistory.put(otherClient, new HashMap<Integer, chatSession>());
-                            chatHistory.get(otherClient).put(Main.clientObjects.get(clientID).sessionID,
-                                    new chatSession(Main.clientObjects.get(clientID).sessionID, clientID, otherClient));
-                            chatHistory.get(otherClient).get(Main.clientObjects.get(clientID).sessionID).addMessage(messageIn, clientID);
-                        }
-                        //chatHistory.get(otherClient).get(Main.clientObjects.get(clientID).sessionID).addMessage(messageIn,clientID);
+                        MessageHistory.storeHistory(Main.clientObjects.get(clientID).sessionID, clientID, Main.clientObjects.get(Main.clientIDs.get(clientIndex)).partner, messageIn);
                         sendMessage(messageIn, Main.clientObjects.get(Main.clientIDs.get(clientIndex)).partner, clientID);
                     }
 
@@ -158,20 +132,7 @@ public class TcpServer {
                 else if (tokens[0].equals("HISTORY_REQ")) {
                     //request history
                     String user = tokens[1];
-                    //need to get chatSession, and relay back infomation
-                    //how to store chatsession?
-                    HashMap<Integer, chatSession> list = chatHistory.get(user);
-                    Iterator it = list.entrySet().iterator();
-                    //for ()
-                    for(chatSession val: list.values()){
-                        ArrayList<String> msgs = val.messages;
-                        for(String x: msgs){
-                            messageOut = x;
-                            messageOut = prepareOutMessage(null, messageOut, clientIndex);
-                            out.println(messageOut);
-                        }
-                    }
-                    messageOut = "END";
+                    messageOut = MessageHistory.getHistory(user,clientID);
                     messageOut = prepareOutMessage(null, messageOut, clientIndex);
                     out.println(messageOut);
                 } else {
@@ -211,22 +172,6 @@ public class TcpServer {
             message = prepareOutMessage(null, message, clientIndex);
             out.println(message);
             return;
-        }
-        if(chatHistory.containsKey(rec)){
-            if(chatHistory.get(rec).containsKey(sess)){
-                chatHistory.get(rec).get(sess).addMessage(message, src);
-            }
-            else{
-                //contains client, but not this specific session id thing
-                chatHistory.get(rec).put(sess, new chatSession(sess, clientID, rec));
-                chatHistory.get(rec).get(sess).addMessage(message, src);
-            }
-
-        }
-        else{
-            chatHistory.put(src, new HashMap<Integer, chatSession>());
-            chatHistory.get(src).put(sess, new chatSession(sess, clientID, rec));
-
         }
 
             //chatHistory.get(src).get(Main.clientObjects.get(Main.clientIDs.get(clientIndex))).addMessage(message, src);

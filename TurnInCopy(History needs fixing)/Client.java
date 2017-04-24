@@ -344,15 +344,14 @@ public class Client
 					messageOut = prepareOutMessage(data, messageOut, clientIndex, encryptKeys);
 					out.println(messageOut);
 					System.out.println("CHAT HISTORY WITH " + choiceTokens[1]);
-					while(true){
-						//iterate through chat history, server should relay it back in strings
-						messageIn = in.readLine();
-						messageIn = prepareInMessage(data, messageIn, clientIndex, encryptKeys);
-						if(messageIn.equals("END")){
-							System.out.println("CHAT HISTORY WITH " + choiceTokens[1] + " COMPLETE");
-							break;
-						}
-						System.out.println(messageIn);
+					messageIn = in.readLine();
+					messageIn = prepareInMessage(data, messageIn, clientIndex, encryptKeys);
+					String [] arr = messageIn.split(" ",2);
+					if (arr[0].equals("HISTORY_RESP")){
+						System.out.println(arr[1]);
+					}
+					else{
+						System.out.println("There has been an error.");
 					}
 				}
 				else if(choiceTokens[0].equals("Available")){
